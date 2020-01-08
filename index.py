@@ -9,7 +9,8 @@ import requests
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 import re
-from fpdf import FPDF
+import os
+import img2pdf
 
 browser = webdriver.Chrome('chromedriver.exe')
 browser.set_window_size(1280,1000)
@@ -31,26 +32,28 @@ class Serv(BaseHTTPRequestHandler):
 
             
             browser.get(url)
-            fileName = 'output/file'+datetime.now().strftime("%H%M%S")+'.jpg'
-            ScreenCapture.fullpage_screenshot(browser,fileName, False)
+            fileName = 'output/file'+datetime.now().strftime("%H%M%S")
+            ScreenCapture.fullpage_screenshot(browser,fileName+'.jpg', False)
 
             # image = Image.open(fileName,mode='r')
-
-            streamFile = io.BytesIO()
             # image.save(streamFile, format='PNG')
 
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.image(fileName)
-            pdf.output(streamFile, "F")
-            pdf.close()
+            # with open("output.pdf", "wb") as f:
+            #     f.write(img2pdf.convert([i for i in os.listdir('.') if i.endswith(".jpg")]))
 
+            # with open(fileName+'.pdf', "wb") as f:
+            #     f.write(img2pdf.convert(fileName+'.jpg'))
+
+            # streamFile = open(fileName+'.pdf', "rb")
+            # output = f.read()
+            output = img2pdf.convert(fileName+'.jpg')
+            # streamFile = io.BytesIO(bytes(f))
             self.send_response(200)
             self.send_header('Content-Type','application/pdf')
-            self.send_header('Content-Disposition','attachment')
-            self.send_header('filename','screenshot.pdf')
+            self.send_header('Content-Disposition','attachment; filename="screenshot.pdf";')
+            self.send_header('Content-Length',len(output))
             self.end_headers()
-            self.wfile.write(streamFile.getvalue())
+            self.wfile.write(bytes(output))
         else:
             if parsed.path == '/':
                 self.path = '/index.html'
